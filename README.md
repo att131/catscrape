@@ -10,7 +10,8 @@ This library is new, so most features are on the to-do list. Here are the suppor
 |--|--|
 |User followers|✅Supported|
 |User following|✅Supported|
-|Get user "About Me"|🟨Coming Soon|
+|Get user "About Me"|✅Supported|
+|Get user "What I'm Working On"|✅Supported|
 |Get user shared projects|🟨Coming Soon|
 |Studio curators|✅Supported|
 |Auto invite to studio|✅Supported|
@@ -81,22 +82,28 @@ The inverse of the `Scratcher.is_following` method, returning whether the user i
 <class 'bool'>
 ```
 
-### `follower_count`
+### `follower_count` and `following_count`
 
-Returns the follower count of the user.
+Returns the follower or following count for the user.
 ```python
+>>> num_followers = user.follower_count()
+>>> type(num_followers)
+<class 'int'>
 >>> num_followers = user.follower_count()
 >>> type(num_followers)
 <class 'int'>
 ```
 
-### `following_count`
+### `get_about_me` and `get_working_on`
 
-Returns the number of scratchers the user is following.
+Returns the text of the "About Me" or "What I'm Working On" section of the user's page.
 ```python
->>> num_followers = user.follower_count()
->>> type(num_followers)
-<class 'int'>
+>>> about_me = user.get_about_me()
+>>> type(about_me)
+<class 'str'>
+>>> working_on = user.get_working_on()
+>>> type(working_on)
+<class 'str'>
 ```
 
 ## Providing Login
@@ -142,5 +149,10 @@ Warning: I have experienced failure to invite more users after about 100-150 inv
 ```
 
 # Versions
+
+## 1.1.2
+- Hotfix: Incorrect `import` statements in `scratcher.py` and `web.py`
+## 1.1.1
+- Added methods to get user "About Me" and "What I'm Working On" sections.
 ## 1.1.0
 - Initial release

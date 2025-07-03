@@ -1,11 +1,19 @@
 from .data import *
 from .web import *
+import html as html_lib
 
 # SCRATCHER CLASS
 
 class Scratcher(object):
     def __init__(self, username):
         self.username = username
+
+    @property
+    def url(self):
+        """
+        Returns the URL of the user's profile.
+        """
+        return 'https://scratch.mit.edu/users/{}'.format(self.username)
 
     def _generate_followers_following_urls(self,
                                            n_pages: int,
@@ -180,7 +188,32 @@ class Scratcher(object):
             return search_for in usernames
         return usernames
     
-    # Wrapper functions
+    GET_DESC_START_TEXT = '<p class="overview">'
+    GET_DESC_END_TEXT = '</p>'
+
+    def _get_description(self, desc_type: str):
+        assert desc_type in [ABOUT_ME, WORKING_ON], "Invalid description type: {}".format(desc_type)
+        
+        # Get the HTML of the user's profile
+        html = get_website_html(self.url)
+
+        # Repeat once for the 'About Me' and twice for the'Working On' section
+        for i in range(1 if desc_type == ABOUT_ME else 2):
+            # Find the overview section
+            start_location = html.find(self.GET_DESC_START_TEXT)
+
+            # Cutoff the HTML at the start location, and remove the start tag
+            html = html[start_location + len(self.GET_DESC_START_TEXT):]
+
+        # Find the end location
+        end_location = html.find(self.GET_DESC_END_TEXT)
+
+        # Cutoff the HTML at the end location
+        html = html[:end_location]
+
+        return html_lib.unescape(html)
+
+    # Public methods
 
     def get_followers(self, verbose: bool=True) -> list[str]:
         """
@@ -258,3 +291,22 @@ class Scratcher(object):
             int: The following amount.
         """
         return len(self.get_following(verbose=verbose))
+    
+
+    def get_about_me(self):
+        """
+        Returns the 'About Me' section of the user's profile.
+
+        Returns:
+            str: The 'About Me' section of the user's profile.
+        """
+        return self._get_description(ABOUT_ME)
+    
+    def get_working_on(self):
+        """
+        Returns the 'Working On' section of the user's profile.
+
+        Returns:
+            str: The 'Working On' section of the user's profile.
+        """
+        return self._get_description(WORKING_ON)
