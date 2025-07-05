@@ -1,6 +1,7 @@
 import time
 import os
 
+import html as html_lib
 import requests
 import warnings
 import appdirs
@@ -20,6 +21,9 @@ from selenium.webdriver.chrome.options import Options
 
 FOLLOWERS = "FOLLOWERS"
 FOLLOWING = "FOLLOWING"
+
+ABOUT_ME = "ABOUT ME"
+WORKING_ON = "WORKING ON"
 
 LOGIN_URL = "https://scratch.mit.edu/login"
 

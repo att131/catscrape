@@ -1,12 +1,17 @@
 from .data import *
 from .web import *
-import html as html_lib
 
 # SCRATCHER CLASS
 
 class Scratcher(object):
     def __init__(self, username):
         self.username = username
+
+        self.followers = None
+        self.following = None
+
+        self.about_me = None
+        self.working_on = None
 
     @property
     def url(self):
@@ -114,18 +119,6 @@ class Scratcher(object):
     GET_FOLLOWERS_THUMB_TEXT = "user thumb item"
 
     def _get_followers_following(self, page_type, search_for=None, verbose=True) -> list[str] | bool:
-        # Check if the data was previously saved
-        if search_for:
-            if getattr(self, "followers", None) and page_type == FOLLOWERS:
-                return search_for in self.followers
-            if getattr(self, "following", None) and page_type == FOLLOWERS:
-                return search_for in self.following
-        else:
-            if getattr(self, "followers", None) and page_type == FOLLOWERS:
-                return self.followers
-            if getattr(self, "following", None) and page_type == FOLLOWERS:
-                return self.following
-        
         # Generate the urls for the followers pages
         urls = self._generate_followers_following_urls(self._get_followers_pages(page_type), page_type)
 
@@ -176,13 +169,6 @@ class Scratcher(object):
         elif page_type == FOLLOWING:
             del usernames[-14:]
 
-        # Save the data for later
-        if not search_for:
-            if page_type == FOLLOWERS:
-                self.followers = usernames
-            elif page_type == FOLLOWING:
-                self.following = usernames
-
         # Return the usernames. If searching for a username, return if the username was found
         if search_for:
             return search_for in usernames
@@ -225,8 +211,14 @@ class Scratcher(object):
         Returns:
             list[str]: The list of followers.
         """
+        if self.followers:
+            return self.followers
+        
+        # Get and cache
         followers = self._get_followers_following(page_type=FOLLOWERS, verbose=verbose)
         assert isinstance(followers, list)
+        self.followers = followers
+
         return followers
     
     def get_following(self, verbose: bool=True) -> list[str]:
@@ -239,33 +231,59 @@ class Scratcher(object):
         Returns:
             list[str]: The list of users that the user follows.
         """
+        if self.following:
+            return self.following
+        
+        # Save and cache
         following = self._get_followers_following(page_type=FOLLOWING, verbose=verbose)
         assert isinstance(following, list)
+        self.following = following
+        
         return following
     
-    def is_following(self, username, verbose: bool=True):
+    def is_following(self, username, verbose: bool=True, cache: bool=True):
         """
         Returns whether the user is following the given username.
 
         Parameters:
+            username (str): The username
             verbose (bool): Whether to be verbose.
+            cache (bool): If true, the full result will be calculated, even if the name is found.
+                If you intend to retrive the list of following later, this is useful.
+                If this is the only time the following list of retrived, disabling this option will improve speed.
 
         Returns:
             bool: Whether the user is following the given username.
         """
-        return self._get_followers_following(page_type=FOLLOWING, search_for=username, verbose=verbose)
+        if self.following:
+            return username in self.following
+        if cache:
+            self.following = self.get_following(verbose=verbose)
+            return username in self.following
+        else:
+            return self._get_followers_following(page_type=FOLLOWING, search_for=username, verbose=verbose)
     
-    def is_followed_by(self, username, verbose: bool=True):
+    def is_followed_by(self, username, verbose: bool=True, cache: bool=True):
         """
         Returns whether the user is followed by the given username.
 
         Parameters:
+            username (str): The username
             verbose (bool): Whether to be verbose.
+            cache (bool): If true, the full result will be calculated, even if the name is found.
+                If you intend to retrive the list of following later, this is useful.
+                If this is the only time the following list of retrived, disabling this option will improve speed.
 
         Returns:
             bool: Whether the user is followed by the given username.
         """
-        return self._get_followers_following(page_type=FOLLOWERS, search_for=username, verbose=verbose)
+        if self.followers:
+            return username in self.followers 
+        if cache:
+            self.followers = self.get_followers(verbose=verbose)
+            return username in self.followers
+        else:
+            return self._get_followers_following(page_type=FOLLOWERS, search_for=username, verbose=verbose)
     
     
     def follower_count(self, verbose: bool=True):
@@ -278,6 +296,8 @@ class Scratcher(object):
         Returns:
             int: The number of followers.
         """
+        if self.followers:
+            return len(self.followers)
         return len(self.get_followers(verbose=verbose))
     
     def following_count(self, verbose: bool=True):
@@ -290,6 +310,8 @@ class Scratcher(object):
         Returns:
             int: The following amount.
         """
+        if self.following:
+            return len(self.following)
         return len(self.get_following(verbose=verbose))
     
 
@@ -300,7 +322,10 @@ class Scratcher(object):
         Returns:
             str: The 'About Me' section of the user's profile.
         """
-        return self._get_description(ABOUT_ME)
+        if self.about_me:
+            return self.about_me
+        self.about_me = self._get_description(ABOUT_ME)
+        return self.about_me
     
     def get_working_on(self):
         """
@@ -309,4 +334,7 @@ class Scratcher(object):
         Returns:
             str: The 'Working On' section of the user's profile.
         """
-        return self._get_description(WORKING_ON)
+        if self.working_on:
+            return self.working_on
+        self.working_on = self._get_description(WORKING_ON)
+        return self.working_on

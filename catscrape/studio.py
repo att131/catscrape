@@ -4,8 +4,10 @@ from .web import *
 # STUDIO CLASS
 
 class Studio(object):
-    def __init__(self, studio_id:int):
+    def __init__(self, studio_id: int):
         self.studio_id = studio_id
+
+        self.curators = None
 
     def _get_curator_url(self):
         return "https://scratch.mit.edu/studios/{}/curators".format(self.studio_id)
@@ -15,20 +17,8 @@ class Studio(object):
     START_LOCATION_TEXT = "studio-members-grid"
     ENDING_TEXT = "studio-member-tile"
 
-    def get_curators(self, scroll_wait_time: float | int=0.2, verbose: bool=True):
-        """
-        Returns a list of the curators and managers
-        
-        Parameters:
-            scroll_wait_time (float | int): Controls the amount of time to wait after clicking the "Load More"
-            button the click the next "Load More" button. If too low, the driver may exhibit unexpected behavior
-            and give an incomplete list of curators.
-            
-        Returns:
-            list: A list of the curators (plus managers and host) of the studio.
-        """
-
-        # Create the driver
+    def _get_curators(self, scroll_wait_time: float | int, verbose: bool):
+        # Create a new driver
         driver = new_driver()
 
         # Get the url of the studio
@@ -96,6 +86,42 @@ class Studio(object):
             html = html[a_location:]
 
         return [curator.strip("/") for curator in curators]
+    
+    # Public methods
+
+    def get_curators(self, scroll_wait_time: float | int=0.2, verbose: bool=True):
+        """
+        Returns a list of the curators and managers.
+        
+        Parameters:
+            scroll_wait_time (float | int): Controls the amount of time to wait after clicking the "Load More"
+            button the click the next "Load More" button. If too low, the driver may exhibit unexpected behavior
+            and give an incomplete list of curators.
+            verbose: Whether to be verbose
+            
+        Returns:
+            list: A list of the curators (plus managers and host) of the studio.
+        """
+        if self.curators:
+            return self.curators
+        curators = self._get_curators(scroll_wait_time=scroll_wait_time, verbose=verbose)
+        self.curators = curators
+        return curators
+    
+    def curator_count(self, scroll_wait_time: float | int=0.2, verbose: bool=True):
+        """
+        Returns the number of curators in the studio. The result *will* be cached.
+        
+        Parameters:
+            scroll_wait_time (float | int): Controls the amount of time to wait after clicking the "Load More"
+            button the click the next "Load More" button. If too low, the driver may exhibit unexpected behavior
+            and give an incomplete list of curators.
+            verbose: Whether to be verbose
+
+        Returns:
+            int: The number of curators
+        """
+        return len(self.get_curators(scroll_wait_time=scroll_wait_time, verbose=verbose))
 
     def invite_curators(self, usernames:list):
         """

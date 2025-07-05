@@ -15,10 +15,14 @@ This library is new, so most features are on the to-do list. Here are the suppor
 |Get user shared projects|🟨Coming Soon|
 |Studio curators|✅Supported|
 |Auto invite to studio|✅Supported|
-|Project hearts|🟨Coming Soon|
-|Project stars|🟨Coming Soon|
-|Project remixes|🟨Coming Soon|
-|Project viewes|🟨Coming Soon|
+|Project hearts|✅Supported|
+|Project stars|✅Supported|
+|Project remixes|✅Supported|
+|Project viewes|✅Supported|
+|Get project description|🟨Coming Soon|
+|Get project notes|🟨Coming Soon|
+|Get sprite names|🟨Coming Soon|
+|Get comments|🟨Coming Soon|
 |Anything else|🟥Not Supported|
 
 ## Installation
@@ -27,6 +31,7 @@ The library can be installed via `pip install`:
 ```bash
 pip install catscrape
 ```
+The install might take some time as the dependencies include Selenium
 
 # Documentation
 
@@ -40,7 +45,9 @@ A `Scratcher` object can be initalized as shown below. In the example code, it i
 ```
 All of the methods can be passed a `verbose` argument, which controls various print statements to assure the user of progress.
 
-All of the methods cache their outputs. For example, if `Scratcher.follower_count` is executed, `Scratcher.get_followers` will return instantly with the already-computed value. The `Scratcher.is_following` and `Scratcher.is_followed_by` methods do not generate a cache because they return as soon as the value is found and do not find all of the followers or following.
+All of the methods cache their outputs. For example, if `Scratcher.follower_count` is called, then `Scratcher.get_followers` will return instantly.
+`Scratcher.follower_count` and `Scratcher.get_followers` all cache their outputs for each other (as well as their following inverses); `Scratcher.is_following` (and it's `is_followed_by` inverse) *can* also cache it's output, if the `cache` argument is set to `True`. If you intend to call other methods after the `is_following` function, make sure the `cache` parameter is set to `True`. If you only intend to call `is_following` once, set the `cache` parameter to `False`.
+The `get_about_me` and `get_working_on` methods also cache their outputs.
 
 ### `get_followers`
 
@@ -122,6 +129,8 @@ The `Studio` class has methods to get the curators of the studio, and to auto-in
 >>> studio = Studio(45693845)
 ```
 
+The `Studio.get_curators` and `Studio.curator_count` methods both cache their outputs and use each others cache.
+
 ### `get_curators`
 
 The `Studio.get_curators` method returns all of the curators of the studio. Becuase it has to physically scroll through the curators using selenium (headless, of course), this function tends to take longer. The `scroll_wait_time` parameter adjusts the amount of time to wait after pressing the "Load More" button to press it again. Changing this too low causes instability in results, possibly leading to incorrect results, with too few curators.
@@ -133,6 +142,15 @@ The `Studio.get_curators` method returns all of the curators of the studio. Becu
 <class 'list'>
 >>> type(curators[0])
 <class 'str'>
+```
+
+### `curator_count`
+
+The `Studio.curator_count` method returns the number of curators in the studio.
+```python
+>>> num_curators = studio.curator_count()
+>>> type(num_curators)
+<class 'int'>
 ```
 
 ### `invite_curators`
@@ -150,8 +168,14 @@ Warning: I have experienced failure to invite more users after about 100-150 inv
 
 # Versions
 
+## 1.2.0
+- Added the `Project` class.
+- Revamped caching of data in `Scratcher` class, and added caching in `Studio` class.
+- Added the `Studio.curator_count` method.
+- Made the Selenium driver run with a disguised agent name, reducing chance of auto-block.
+- Added unit tests to the Github repository.
 ## 1.1.2
-- Hotfix: Incorrect `import` statements in `scratcher.py` and `web.py`
+- Hotfix: Incorrect `import` statements in `scratcher.py` and `web.py`.
 ## 1.1.1
 - Added methods to get user "About Me" and "What I'm Working On" sections.
 ## 1.1.0
