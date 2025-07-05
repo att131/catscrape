@@ -8,9 +8,15 @@ class Studio(object):
         self.studio_id = studio_id
 
         self.curators = None
+        self.followers = None
 
-    def _get_curator_url(self):
+    @property
+    def curator_page_url(self):
         return "https://scratch.mit.edu/studios/{}/curators".format(self.studio_id)
+    
+    @property
+    def main_page_url(self):
+        return "https://scratch.mit.edu/studios/{}/".format(self.studio_id) 
     
     CHARS_AFTER_A_TO_SKIP = 16
     TAG_TO_FIND = "<a"
@@ -21,11 +27,8 @@ class Studio(object):
         # Create a new driver
         driver = new_driver()
 
-        # Get the url of the studio
-        url = self._get_curator_url()
-
         # Open the website
-        driver.get(url)
+        driver.get(self.curator_page_url)
 
         # Scroll through the curators
         wait = WebDriverWait(driver, 5)
@@ -87,6 +90,28 @@ class Studio(object):
 
         return [curator.strip("/") for curator in curators]
     
+    GET_FOLLOWERS_START_TEXT = ">"
+    GET_FOLLOWERS_END_TEXT = "followers</span>"
+
+    def _get_followers(self):
+        # Get the HTML
+        html = get_website_html(self.main_page_url)
+
+        # Find the text just after the number of followers
+        after_text_html = html.find(self.GET_FOLLOWERS_END_TEXT)
+        assert after_text_html != -1
+
+        # Cut off the HTML
+        html = html[:after_text_html]
+
+        # Find the start of the span tag
+        start = html.find(">")
+
+        # Cut off the HTML
+        html = html[start + 1:]
+
+        return int(html.strip())
+    
     # Public methods
 
     def get_curators(self, scroll_wait_time: float | int=0.2, verbose: bool=True):
@@ -123,45 +148,16 @@ class Studio(object):
         """
         return len(self.get_curators(scroll_wait_time=scroll_wait_time, verbose=verbose))
 
-    def invite_curators(self, usernames:list):
+    def get_follower_count(self):
         """
-        Invite the given list of usernames to the studio.
-        Note: This action requires a Scratch account with manager permissions or above.
-            To provide the login data, run `catscrape.save_login_data` with the username and password passed.
-        Note: Don't try to give more than 100-150 usernames, as the Scratch server will occasionally stop allowing invites.
-
-        WARNING: Spamming invites can get your scratch account blocked or banned!
+        Return the number of followers the studio has.
+        The only available information is the number of followers, not the usernames.
         
-        Parameters:
-            usernames (list): The list of usernames to invite
+        Returns:
+            int: The number of followers
         """
-        # Check if the list of usernames is large
-        if len(usernames) > 100:
-            warnings.warn(f"You passed {len(usernames)} usernames. With this many, the Scratch server might stop responding to invites, and invite only some of the curators. You also might get your account blocked.")
-
-        # Create a new driver
-        driver = new_driver(headless=False)
-
-        # Initalize the wait object
-        wait = WebDriverWait(driver, 5)
-
-        # Login to the account
-        login()
-
-        # Go to the URL of the studio
-        driver.get(self._get_curator_url())
-
-        for username_idx, username in enumerate(usernames):
-            # Wait until the element is interactive
-            invite_input = wait.until(EC.visibility_of_element_located((By.XPATH, '//input[not(@name="q")]')))
-            
-            # Type the username
-            invite_input.send_keys(username)
-
-            # Press the [ENTER] key
-            invite_input.send_keys(Keys.RETURN)
-
-            time.sleep(0.3)
-
-        # Close the browser
-        driver.quit()
+        if self.followers:
+            return self.followers
+        followers = self._get_followers()
+        self.followers = followers
+        return self.followers

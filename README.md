@@ -168,6 +168,8 @@ Warning: I have experienced failure to invite more users after about 100-150 inv
 
 # Versions
 
+## 1.2.1
+- Removed the `Studio.invite_curators` method for simplification, and to stay focused on *catscrape*'s objective.
 ## 1.2.0
 - Added the `Project` class.
 - Revamped caching of data in `Scratcher` class, and added caching in `Studio` class.
