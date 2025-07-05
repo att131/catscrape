@@ -168,6 +168,8 @@ Warning: I have experienced failure to invite more users after about 100-150 inv
 
 # Versions
 
+## 1.2.2
+- Hotfix: Fixed invalid `def` syntax in `project.py`
 ## 1.2.1
 - Removed the `Studio.invite_curators` method for simplification, and to stay focused on *catscrape*'s objective.
 ## 1.2.0

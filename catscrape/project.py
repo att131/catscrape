@@ -38,8 +38,8 @@ class Project:
         # Cut off the end of the HTML
         html = html[:closing_text]
 
-        # Return the number
-        return int(html)
+        # Return the number. Strip the quotes which are sometimes present
+        return int(html.strip('"'))
 
     # Public methods
 
