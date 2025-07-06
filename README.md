@@ -168,6 +168,9 @@ Warning: I have experienced failure to invite more users after about 100-150 inv
 
 # Versions
 
+## 1.2.3
+- Modified the `Scratcher.get_about_me` and `Scratcher.get_working_on` to remove `a` tags and `br` tags.
+- Fixed the `Scratcher.get_followers` and `Scratcher.get_following` methods from returning random incorrect usernames at the end of the list, and made them more resilent to future changes.
 ## 1.2.2
 - Hotfix: Fixed invalid `def` syntax in `project.py`
 ## 1.2.1

@@ -16,7 +16,7 @@ class Studio(object):
     
     @property
     def main_page_url(self):
-        return "https://scratch.mit.edu/studios/{}/".format(self.studio_id) 
+        return "https://scratch.mit.edu/studios/{}/".format(self.studio_id)
     
     CHARS_AFTER_A_TO_SKIP = 16
     TAG_TO_FIND = "<a"
@@ -57,7 +57,7 @@ class Studio(object):
         # Skip one "<a" tag, and repeat the process
 
         # Cut off the html text to the start location
-        start_location = html.find(Studio.START_LOCATION_TEXT)
+        start_location = find(html, Studio.START_LOCATION_TEXT)
         html = html[start_location:]
 
         # Close the driver as it is no longer needed
@@ -71,7 +71,7 @@ class Studio(object):
                 break
 
             # Find the first "<a" tag
-            a_location = html.find(Studio.TAG_TO_FIND) + Studio.CHARS_AFTER_A_TO_SKIP
+            a_location = find(html, Studio.TAG_TO_FIND) + Studio.CHARS_AFTER_A_TO_SKIP
 
             # Cut off the html text to the "<a" tag
             html = html[a_location:]
@@ -83,7 +83,7 @@ class Studio(object):
             curators.append(html[:end_location])
 
             # Find the next "<a" tag
-            a_location = html.find(Studio.TAG_TO_FIND) + len(Studio.TAG_TO_FIND)
+            a_location = find(html, Studio.TAG_TO_FIND) + len(Studio.TAG_TO_FIND)
 
             # Cut off the HTML
             html = html[a_location:]
@@ -98,14 +98,13 @@ class Studio(object):
         html = get_website_html(self.main_page_url)
 
         # Find the text just after the number of followers
-        after_text_html = html.find(self.GET_FOLLOWERS_END_TEXT)
-        assert after_text_html != -1
+        after_text_html = find(html, self.GET_FOLLOWERS_END_TEXT)
 
         # Cut off the HTML
         html = html[:after_text_html]
 
         # Find the start of the span tag
-        start = html.find(">")
+        start = find(html, ">")
 
         # Cut off the HTML
         html = html[start + 1:]

@@ -72,7 +72,7 @@ class Scratcher(object):
         html = get_website_html(url)
 
         # Find the location of the parent span tag of the list of links to other pages
-        start_location = html.find(Scratcher.GET_FOLLOWERS_PAGES_TEXT)
+        start_location = find(html, Scratcher.GET_FOLLOWERS_PAGES_TEXT)
 
         # Add the skip amount to the start location
         start_location += Scratcher.GET_FOLLOWERS_PAGES_FIRST_SKIP
@@ -86,7 +86,7 @@ class Scratcher(object):
 
         while True:
             # Get the location of the next span
-            span_location = html.find(Scratcher.GET_FOLLOWERS_PAGES_SPAN)
+            span_location = find(html, Scratcher.GET_FOLLOWERS_PAGES_SPAN)
 
             # Make sure we have not passed a div, if so, the pages section of the code has ended
             # After finding the div location, compare it to the location of the next span
@@ -119,7 +119,7 @@ class Scratcher(object):
     GET_FOLLOWERS_THUMB_TEXT = "user thumb item"
 
     def _get_followers_following(self, page_type, search_for=None, verbose=True) -> list[str] | bool:
-        # Generate the urls for the followers pages
+        # Get the urls for the followers pages
         urls = self._generate_followers_following_urls(self._get_followers_pages(page_type), page_type)
 
         usernames = []
@@ -137,7 +137,7 @@ class Scratcher(object):
                 return usernames
 
             # Get start location
-            start_location = html.find(Scratcher.GET_FOLLOWERS_THUMB_TEXT) + Scratcher.GET_FOLLOWERS_AFTER_THUMB
+            start_location = find(html, Scratcher.GET_FOLLOWERS_THUMB_TEXT) + Scratcher.GET_FOLLOWERS_AFTER_THUMB
 
             # Shorten url
             html = html[start_location - 1:]
@@ -152,11 +152,13 @@ class Scratcher(object):
             for i in range(Scratcher.GET_FOLLOWERS_PER_PAGE):
                 # Skip the number of triangles
                 for i in range(Scratcher.GET_FOLLOWERS_CHARS_TO_SKIP):
-                    start_location = html.find(Scratcher.GET_FOLLOWERS_SKIP_CHAR)
+                    start_location = find(html, Scratcher.GET_FOLLOWERS_SKIP_CHAR)
 
                     # Cut off the html, but add delete one more char, this is the triangle
                     html = html[start_location + 1:]
 
+                # Use html.find because this char is sometimes not present when looking for usernames after
+                # all have been found. This is fine because they are removed later.
                 usernames.append(html[:html.find(Scratcher.GET_FOLLOWERS_SKIP_CHAR)])
 
             # Check if the username being searched for is in the list
@@ -165,17 +167,29 @@ class Scratcher(object):
         
         # Each of the methods introduce some incorrect random text, delete that
         if page_type == FOLLOWERS:
-            del usernames[-9:]
+            usernames = usernames[:-31]
         elif page_type == FOLLOWING:
-            del usernames[-14:]
+            usernames = usernames[:-53]
+
+        # Remove usernames with invalid chars in case Scratch changes something and breaks this
+        valid_usernames = []
+        for username in usernames:
+            for char in username:
+                if char not in VALID_USERNAME_CHARS:
+                    break
+            else:
+                valid_usernames.append(username)
 
         # Return the usernames. If searching for a username, return if the username was found
         if search_for:
-            return search_for in usernames
-        return usernames
+            return search_for in valid_usernames
+        return valid_usernames
     
     GET_DESC_START_TEXT = '<p class="overview">'
-    GET_DESC_END_TEXT = '</p>'
+    GET_DESC_END_TEXT = "</p>"
+    GET_DESC_A_RE = r'<a href="[^"]*">'
+    GET_DESC_REMOVE = ["</a>", "<a />"]
+    GET_DESC_NEWLINE = ["<br>", "</br>", "<br />"]
 
     def _get_description(self, desc_type: str):
         assert desc_type in [ABOUT_ME, WORKING_ON], "Invalid description type: {}".format(desc_type)
@@ -195,9 +209,21 @@ class Scratcher(object):
         end_location = html.find(self.GET_DESC_END_TEXT)
 
         # Cutoff the HTML at the end location
-        html = html[:end_location]
+        desc = html[:end_location]
 
-        return html_lib.unescape(html)
+        # Remove the 'a' tags
+        desc = re.sub(self.GET_DESC_A_RE, '', desc)
+
+        # Remove the other tags
+        for tag in self.GET_DESC_REMOVE:
+            desc = desc.replace(tag, '')
+
+        # Replace the <br> tags with newlines
+        for tag in self.GET_DESC_NEWLINE:
+            desc = desc.replace(tag, "\n")
+
+        # Convert any special chars with the HTML library
+        return html_lib.unescape(desc)
 
     # Public methods
 
@@ -328,6 +354,7 @@ class Scratcher(object):
         return self.about_me
     
     def get_working_on(self):
+
         """
         Returns the 'Working On' section of the user's profile.
 

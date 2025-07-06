@@ -1,5 +1,6 @@
 import time
 import os
+import re
 
 import html as html_lib
 import requests
@@ -24,3 +25,13 @@ FOLLOWING = "FOLLOWING"
 
 ABOUT_ME = "ABOUT ME"
 WORKING_ON = "WORKING ON"
+
+VALID_USERNAME_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_"
+
+# FUNCTIONS
+
+def find(s, seq):
+    """ Finds the sequence in the string, raising an exception if not present. """
+    loc = s.find(seq)
+    #assert loc != -1
+    return loc

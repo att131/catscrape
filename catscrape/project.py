@@ -25,15 +25,13 @@ class Project:
         html = get_website_html(self.url, use_java=True)
 
         # Find the stat text
-        stat_loc = html.find(stat)
-        assert stat_loc != -1
+        stat_loc = find(html, stat)
 
         # Cut off the HTML
         html = html[stat_loc + len(stat):]
 
         # Find the closing text
-        closing_text = html.find(self.GET_STAT_CLOSING_TEXT)
-        assert stat_loc != -1
+        closing_text = find(html, self.GET_STAT_CLOSING_TEXT)
 
         # Cut off the end of the HTML
         html = html[:closing_text]

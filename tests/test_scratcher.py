@@ -50,6 +50,9 @@ def test_description():
     description = user.get_about_me()
     description_working_on = user.get_working_on()
 
+    print(description)
+    print(description_working_on)
+
     assert "Got hooked on coding" in description
     assert "YouTube Tutorials" in description_working_on
 
