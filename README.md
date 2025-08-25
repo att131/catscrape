@@ -23,7 +23,6 @@ This library is new, so most features are on the to-do list. Here are the suppor
 |Get project notes|🟨Coming Soon|
 |Get sprite names|🟨Coming Soon|
 |Get comments|🟨Coming Soon|
-|Anything else|🟥Not Supported|
 
 ## Installation
 
@@ -186,4 +185,5 @@ Warning: I have experienced failure to invite more users after about 100-150 inv
 ## 1.1.1
 - Added methods to get user "About Me" and "What I'm Working On" sections.
 ## 1.1.0
+
 - Initial release
